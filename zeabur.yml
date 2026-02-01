@@ -1,0 +1,49 @@
+# Zeabur部署配置
+
+services:
+  # 后端服务
+  - name: gemini-api
+    type: service
+    image: python:3.11-slim
+    buildCommand: |
+      # 安装依赖
+      pip install --no-cache-dir -r requirements.txt
+      # 安装浏览器依赖
+      apt-get update && \
+      apt-get install -y --no-install-recommends \
+        curl \
+        chromium chromium-driver \
+        dbus dbus-x11 \
+        xvfb xauth \
+        libglib2.0-0 libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+        libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+        libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 \
+        libcairo2 fonts-liberation fonts-noto-cjk && \
+      rm -rf /var/lib/apt/lists/*
+    startCommand: |
+      # 启动 Xvfb
+      Xvfb :99 -screen 0 1280x800x24 -ac &
+      sleep 1
+      export DISPLAY=:99
+      # 启动应用
+      python main.py
+    env:
+      - KEY=PYTHONDONTWRITEBYTECODE
+        VALUE=1
+      - KEY=PYTHONUNBUFFERED
+        VALUE=1
+      - KEY=TZ
+        VALUE=Asia/Shanghai
+    ports:
+      - port: 7860
+        type: HTTP
+    volumes:
+      - name: data
+        mountPath: /app/data
+    healthCheck:
+      http:
+        path: /admin/health
+        port: 7860
+        interval: 30s
+        timeout: 10s
+        retries: 3

@@ -48,6 +48,13 @@ class BasicConfig(BaseModel):
     base_url: str = Field(default="", description="服务器URL（留空则自动检测）")
     proxy_for_auth: str = Field(default="", description="账户操作代理地址（注册/登录/刷新，留空则不使用代理）")
     proxy_for_chat: str = Field(default="", description="对话操作代理地址（JWT/会话/消息，留空则不使用代理）")
+    qg_proxy_enabled: bool = Field(default=False, description="是否启用青果代理（用于注册时动态获取代理IP）")
+    qg_proxy_api_key: str = Field(default="", description="青果代理API密钥")
+    qg_proxy_secret_id: str = Field(default="", description="青果代理密钥ID（可选）")
+    qg_proxy_secret_key: str = Field(default="", description="青果代理密钥Key（可选）")
+    qg_proxy_type: str = Field(default="short_term", description="青果代理类型: short_term/unlimited_pool/traffic_pool/data_center_pool")
+    qg_proxy_region: str = Field(default="global", description="青果代理地区: global/us/eu/asia/cn等")
+    qg_proxy_protocol: str = Field(default="http", description="青果代理协议: http/https/socks5")
     duckmail_base_url: str = Field(default="https://api.duckmail.sbs", description="DuckMail API地址")
     duckmail_api_key: str = Field(default="", description="DuckMail API key")
     duckmail_verify_ssl: bool = Field(default=True, description="DuckMail SSL校验")
@@ -201,6 +208,13 @@ class ConfigManager:
             base_url=basic_data.get("base_url") or "",
             proxy_for_auth=str(proxy_for_auth or "").strip(),
             proxy_for_chat=str(proxy_for_chat or "").strip(),
+            qg_proxy_enabled=_parse_bool(basic_data.get("qg_proxy_enabled"), False),
+            qg_proxy_api_key=str(basic_data.get("qg_proxy_api_key") or "").strip(),
+            qg_proxy_secret_id=str(basic_data.get("qg_proxy_secret_id") or "").strip(),
+            qg_proxy_secret_key=str(basic_data.get("qg_proxy_secret_key") or "").strip(),
+            qg_proxy_type=basic_data.get("qg_proxy_type") or "short_term",
+            qg_proxy_region=basic_data.get("qg_proxy_region") or "global",
+            qg_proxy_protocol=basic_data.get("qg_proxy_protocol") or "http",
             duckmail_base_url=basic_data.get("duckmail_base_url") or "https://api.duckmail.sbs",
             duckmail_api_key=str(duckmail_api_key_raw or "").strip(),
             duckmail_verify_ssl=_parse_bool(basic_data.get("duckmail_verify_ssl"), True),

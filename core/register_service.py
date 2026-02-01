@@ -12,6 +12,7 @@ from core.config import config
 from core.mail_providers import create_temp_mail_client
 from core.gemini_automation import GeminiAutomation
 from core.gemini_automation_uc import GeminiAutomationUC
+from core.qg_proxy_client import create_qg_proxy_client
 
 logger = logging.getLogger("gemini.register")
 
@@ -197,6 +198,27 @@ class RegisterService(BaseTaskService[RegisterTask]):
 
         log_cb("info", f"✅ 邮箱注册成功: {client.email}")
 
+        # 获取代理URL（优先使用青果代理）
+        proxy_url = config.basic.proxy_for_auth
+
+        if config.basic.qg_proxy_enabled:
+            log_cb("info", "🌐 使用青果代理获取动态IP...")
+            qg_client = create_qg_proxy_client(
+                api_key=config.basic.qg_proxy_api_key,
+                secret_id=config.basic.qg_proxy_secret_id,
+                secret_key=config.basic.qg_proxy_secret_key,
+                proxy_type=config.basic.qg_proxy_type,
+                region=config.basic.qg_proxy_region,
+                log_callback=log_cb,
+            )
+
+            proxy_url = qg_client.get_proxy_url()
+            if not proxy_url:
+                log_cb("warning", "⚠️ 青果代理获取失败，使用配置的静态代理")
+                proxy_url = config.basic.proxy_for_auth
+            else:
+                log_cb("info", f"✅ 青果代理获取成功: {proxy_url[:30]}...")
+
         # 根据配置选择浏览器引擎
         browser_engine = (config.basic.browser_engine or "dp").lower()
         headless = config.basic.browser_headless
@@ -207,7 +229,7 @@ class RegisterService(BaseTaskService[RegisterTask]):
             # DrissionPage 引擎：支持有头和无头模式
             automation = GeminiAutomation(
                 user_agent=self.user_agent,
-                proxy=config.basic.proxy_for_auth,
+                proxy=proxy_url,
                 headless=headless,
                 log_callback=log_cb,
             )
@@ -218,7 +240,7 @@ class RegisterService(BaseTaskService[RegisterTask]):
                 headless = False
             automation = GeminiAutomationUC(
                 user_agent=self.user_agent,
-                proxy=config.basic.proxy_for_auth,
+                proxy=proxy_url,
                 headless=headless,
                 log_callback=log_cb,
             )

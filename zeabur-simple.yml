@@ -1,0 +1,57 @@
+# Zeabur一键部署配置
+
+services:
+  - name: gemini-api
+    type: service
+    image: cooooookk/gemini-business2api:latest
+    env:
+      # 管理员密码（必须修改）
+      - KEY: ADMIN_KEY
+        VALUE: admin123456
+      # 青果代理配置
+      - KEY: QG_PROXY_ENABLED
+        VALUE: "true"
+      - KEY: QG_PROXY_API_KEY
+        VALUE: BYJ3MCP5
+      - KEY: QG_PROXY_SECRET_KEY
+        VALUE: 7B3C288DCF56
+      - KEY: QG_PROXY_TYPE
+        VALUE: short_term
+      - KEY: QG_PROXY_REGION
+        VALUE: global
+      - KEY: QG_PROXY_PROTOCOL
+        VALUE: http
+      # DuckMail配置
+      - KEY: DUCKMAIL_API_KEY
+        VALUE: dk_9172ab8f7dc0bc4b845d2f2a38e1246afc6d4b28427fb711e191cd4c2ff309a1
+      - KEY: DUCKMAIL_BASE_URL
+        VALUE: https://api.duckmail.sbs
+      - KEY: TEMP_MAIL_PROVIDER
+        VALUE: duckmail
+      # 浏览器配置
+      - KEY: BROWSER_ENGINE
+        VALUE: dp
+      - KEY: BROWSER_HEADLESS
+        VALUE: "false"
+      # 其他配置
+      - KEY: PORT
+        VALUE: "7860"
+      - KEY: TZ
+        VALUE: Asia/Shanghai
+      - KEY: PYTHONDONTWRITEBYTECODE
+        VALUE: "1"
+      - KEY: PYTHONUNBUFFERED
+        VALUE: "1"
+    ports:
+      - port: 7860
+        type: HTTP
+    volumes:
+      - name: data
+        mountPath: /app/data
+    healthCheck:
+      http:
+        path: /admin/health
+        port: 7860
+        interval: 30s
+        timeout: 10s
+        retries: 3
