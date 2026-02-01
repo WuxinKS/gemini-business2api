@@ -131,14 +131,18 @@ async def load_stats():
     return data
 
 async def save_stats(stats):
-    """保存统计数据（异步）。数据库不可用时不落盘。"""
-    stats_to_save = stats.copy()
-    if isinstance(stats_to_save.get("request_timestamps"), deque):
-        stats_to_save["request_timestamps"] = list(stats_to_save["request_timestamps"])
-    if isinstance(stats_to_save.get("failure_timestamps"), deque):
-        stats_to_save["failure_timestamps"] = list(stats_to_save["failure_timestamps"])
-    if isinstance(stats_to_save.get("rate_limit_timestamps"), deque):
-        stats_to_save["rate_limit_timestamps"] = list(stats_to_save["rate_limit_timestamps"])
+    """保存统计数据(异步)。数据库不可用时不落盘。"""
+    def convert_deques(obj):
+        """递归转换所有 deque 对象为 list"""
+        if isinstance(obj, deque):
+            return list(obj)
+        elif isinstance(obj, dict):
+            return {k: convert_deques(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_deques(item) for item in obj]
+        return obj
+
+    stats_to_save = convert_deques(stats)
 
     if storage.is_database_enabled():
         try:
